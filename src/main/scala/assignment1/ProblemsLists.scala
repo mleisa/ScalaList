@@ -1,6 +1,6 @@
 package assignment1
 
-import list.implementation.SinglyLinkedIntList
+import list.implementation.{Cons, Empty, SinglyLinkedIntList}
 import list.traits.IntList
 
 object ProblemsLists {
@@ -23,7 +23,7 @@ object ProblemsLists {
       if (times == 0) {
         list
       } else {
-        helper(list.prepend(i), i, times - 1)
+        helper(list.append(i), i, times - 1)
       }
     }
 
@@ -45,7 +45,29 @@ object ProblemsLists {
     * @param l     IntList that should be processed
     * @return IntList that contains the duplicates and all other nums
     */
-  def duplicateEqualNumbers(times: Int, l: IntList): IntList = ???
+  def duplicateEqualNumbers(times: Int, l: IntList): IntList = {
+
+    def helper(dupList: IntList, index: Int): IntList = {
+      def duplicate(list: IntList, times: Int): IntList = {
+        if (times == 0) {
+          list
+        } else {
+          duplicate(list.append(l.get(index)), times - 1)
+        }
+      }
+
+      if (index < l.size) {
+        l.get(index) match {
+          case odd if (odd % 2 != 0) => helper(dupList.append(odd), index + 1)
+          case even if (even % 2 == 0) => helper(duplicate(dupList, times), index + 1)
+        }
+      } else {
+        dupList
+      }
+    }
+
+    helper(SinglyLinkedIntList(), 0)
+  }
 
   /**
     *
@@ -78,7 +100,17 @@ object ProblemsLists {
     * @param l IntList to split
     * @return A tuple of two IntLists that contains the separated lists
     */
-  def splitList(l: IntList): (IntList, IntList) = ???
+  def splitList(l: IntList): (IntList, IntList) = {
+    def helper(list1: IntList, list2: IntList, index: Int): (IntList, IntList) = {
+      index match {
+        case _ if (index < Math.round(l.size.toFloat / 2)) => helper(list1.append(l.get(index)), list2, index + 1)
+        case _ if (index >= Math.round(l.size.toFloat / 2) && index < l.size) => helper(list1, list2.append(l.get(index)), index + 1)
+        case _ if (index == l.size) => (list1, list2)
+      }
+    }
+
+    helper(SinglyLinkedIntList(), SinglyLinkedIntList(), 0)
+  }
 
   /**
     *
@@ -92,7 +124,22 @@ object ProblemsLists {
     * @param l IntList to sort
     * @return Sorted IntList
     */
-  def mergeSort(l: IntList): IntList = ???
+  def mergeSort(l: IntList): IntList = {
+    if (l.size / 2 == 0) l
+    else {
+      def merge(list: IntList, ys: IntList): IntList =
+        (list, ys) match {
+          case (Empty, x) => x
+          case (y, Empty) => y
+          case (Cons(x, xs1), Cons(y, ys1)) =>
+            if (x < y) Cons(x, merge(xs1, ys))
+            else Cons(y, merge(list, ys1))
+        }
+
+      val (left, right) = splitList(l)
+      merge(mergeSort(left), mergeSort(right))
+    }
+  }
 
   /**
     * Given the weight in kilograms, that a bag can hold, and a list of items represented by their weights
@@ -112,7 +159,21 @@ object ProblemsLists {
     * @param items    weights of the items in kilograms that are available
     * @return maximum filling capacity
     */
-  def packProblem(capacity: Int, items: IntList): Int = ???
+
+  def packProblem(capacity: Int, items: IntList): Int = {
+    def knapsack(capacity: Int, items: IntList, index: Int): Int = {
+      if (capacity == 0 || index == items.size) {
+        0
+      }
+      else if (items.get(index) > capacity) {
+        knapsack(capacity, items, index + 1)
+      } else {
+        (items.get(index) + knapsack(capacity - items.get(index), items, index + 1)).max(knapsack(capacity, items, index + 1))
+      }
+    }
+    knapsack(capacity, items, 0)
+  }
+
 
   /**
     * Given the weight in kilograms, that a bag can hold, and a list of items represented by their weights
