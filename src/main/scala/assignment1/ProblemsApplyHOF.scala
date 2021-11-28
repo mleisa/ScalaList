@@ -20,7 +20,7 @@ object ProblemsApplyHOF {
     * findMin should find the smallest element of a list
     */
   def findMin(l: IntList): Int = {
-    l.insertionSort.get(0)
+    l.insertionSort.head
   }
 
   /**

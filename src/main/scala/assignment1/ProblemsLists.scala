@@ -18,18 +18,9 @@ object ProblemsLists {
     * @return List of duplicated numbers
     */
   def duplicateNum(i: Int, times: Int): IntList = {
-
-    def helper(list: IntList, i: Int, times: Int): IntList = {
-      if (times == 0) {
-        list
-      } else {
-        helper(list.append(i), i, times - 1)
-      }
-    }
-
-    helper(SinglyLinkedIntList(), i, times)
+    if (times == 0) Empty
+    else Cons(i, duplicateNum(i, times - 1))
   }
-
 
   /**
     *
@@ -46,27 +37,15 @@ object ProblemsLists {
     * @return IntList that contains the duplicates and all other nums
     */
   def duplicateEqualNumbers(times: Int, l: IntList): IntList = {
-
-    def helper(dupList: IntList, index: Int): IntList = {
-      def duplicate(list: IntList, times: Int): IntList = {
-        if (times == 0) {
-          list
-        } else {
-          duplicate(list.append(l.get(index)), times - 1)
-        }
-      }
-
-      if (index < l.size) {
-        l.get(index) match {
-          case odd if (odd % 2 != 0) => helper(dupList.append(odd), index + 1)
-          case even if (even % 2 == 0) => helper(duplicate(dupList, times), index + 1)
-        }
+    l match {
+      case Cons(head, Empty) => if (head % 2 == 0 && times > 0) Cons(head, duplicateNum(head, times)) else Cons(head, Empty)
+      case Cons(head, tail) => if (head % 2 != 0 && times > 0) {
+        Cons(head, duplicateEqualNumbers(times, tail))
       } else {
-        dupList
+        Cons(head, duplicateEqualNumbers(times - 1, tail).prefix(duplicateNum(head, times - 1)))
       }
     }
 
-    helper(SinglyLinkedIntList(), 0)
   }
 
   /**
@@ -83,7 +62,7 @@ object ProblemsLists {
     * @return IntList that contains all numbers of both lists in an ascending order
     */
   def merge(l1: IntList, l2: IntList): IntList = {
-    l1.prefix(l2).insertionSort
+    mergeSort(l1.prefix(l2))
   }
 
   /**
@@ -101,11 +80,11 @@ object ProblemsLists {
     * @return A tuple of two IntLists that contains the separated lists
     */
   def splitList(l: IntList): (IntList, IntList) = {
-    def helper(list1: IntList, list2: IntList, index: Int): (IntList, IntList) = {
-      index match {
-        case _ if (index < Math.round(l.size.toFloat / 2)) => helper(list1.append(l.get(index)), list2, index + 1)
-        case _ if (index >= Math.round(l.size.toFloat / 2) && index < l.size) => helper(list1, list2.append(l.get(index)), index + 1)
-        case _ if (index == l.size) => (list1, list2)
+    def helper(list1: IntList, list2: IntList, x: Int): (IntList, IntList) = {
+      x match {
+        case _ if (x < Math.round(l.size.toFloat / 2)) => helper(list1.append(l.get(x)), list2, x + 1)
+        case _ if (x >= Math.round(l.size.toFloat / 2) && x < l.size) => helper(list1, list2.append(l.get(x)), x + 1)
+        case _ if (x == l.size) => (list1, list2)
       }
     }
 
@@ -171,9 +150,9 @@ object ProblemsLists {
         (items.get(index) + knapsack(capacity - items.get(index), items, index + 1)).max(knapsack(capacity, items, index + 1))
       }
     }
+
     knapsack(capacity, items, 0)
   }
-
 
   /**
     * Given the weight in kilograms, that a bag can hold, and a list of items represented by their weights
@@ -197,7 +176,18 @@ object ProblemsLists {
     *                   this case they won't fit into the bag
     * @return minimum number of bags required
     */
-  def minBagsCount(capacity: Int, itemWeights: IntList): Int = ???
+  def minBagsCount(capacity: Int, itemWeights: IntList): Int = {
+    def itemRemover(sum: Int, l: IntList, newL: IntList): (IntList, Int) = {
+      if (l.isEmpty) (newL, 1)
+      else if (sum + l.head > capacity) itemRemover(sum, l.tail, newL.append(l.head))
+      else if (l.head > sum && l.head < capacity) itemRemover(l.head, l.tail, newL)
+      else itemRemover(sum + l.head, l.tail, newL)
+    }
 
+    itemWeights match {
+      case Empty => 0
+      case _ => minBagsCount(capacity, itemRemover(0, itemWeights.insertionSort.flip, Empty)._1) + itemRemover(0, itemWeights.insertionSort.flip, Empty)._2
+    }
 
+  }
 }
